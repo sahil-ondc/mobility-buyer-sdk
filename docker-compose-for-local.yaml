@@ -1,0 +1,80 @@
+version: "2"
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - "./data:/data/db"
+
+  nginx:
+    build:
+      context: ref-mobility-buyer-frontend
+      dockerfile: DockerfileWithoutSSL
+      args:
+        REACT_APP_BASE_URL: ${REACT_APP_BASE_URL}
+        REACT_APP_GOOGLE_API_KEY: ${REACT_APP_GOOGLE_API_KEY}
+        REACT_APP_GOOGLE_MAPS_API_KEY: ${REACT_APP_GOOGLE_MAPS_API_KEY}
+    container_name: ref-mobility-buyer-frontend
+    environment:
+      REACT_APP_BASE_URL: ${REACT_APP_BASE_URL}
+      REACT_APP_GOOGLE_API_KEY: ${REACT_APP_GOOGLE_API_KEY}
+      REACT_APP_GOOGLE_MAPS_API_KEY: ${REACT_APP_GOOGLE_MAPS_API_KEY}
+    depends_on:
+      - ref-mobility-buyer-backend
+    expose:
+      - 80
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+
+  certbot:
+    image: certbot/certbot
+    restart: "always"
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+  ref-mobility-buyer-backend:
+    build:
+      context: ref-mobility-buyer-backend
+    environment:
+      BUYER_APP_PORT: ${BUYER_APP_PORT}
+      BUYER_APP_ID: ${BUYER_APP_ID}
+      ENTITY_GST_CITY_CODE: ${ENTITY_GST_CITY_CODE}
+      GST_NO: ${GST_NO}
+      GST_BUSINESS_ADDRESS: ${GST_BUSINESS_ADDRESS}
+      GST_LEGAL_ENTITY_NAME: ${GST_LEGAL_ENTITY_NAME}
+      UKID_BPP: ${UKID_BPP}
+      REGISTRY_URL: ${REGISTRY_URL}
+      PUBLIC_KEY: ${PUBLIC_KEY}
+      PRIVATE_KEY: ${PRIVATE_KEY}
+      GATEWAY_URL: ${GATEWAY_URL}
+      NAME_AS_PER_PAN: ${NAME_AS_PER_PAN}
+      PAN_NO: ${PAN_NO}
+      PAN_DATE_OF_INCORPORATION: ${PAN_DATE_OF_INCORPORATION}
+      NAME_OF_AUTHORISED_SIGNATORY: ${NAME_OF_AUTHORISED_SIGNATORY}
+      ADDRESS_OF_AUTHORISED_SIGNATORY: ${ADDRESS_OF_AUTHORISED_SIGNATORY}
+      EMAIL_ID: ${EMAIL_ID}
+      MOBILE_NO: ${MOBILE_NO}
+      COUNTRY: ${COUNTRY}
+      SUBSCRIBER_ID: ${SUBSCRIBER_ID}
+      VALID_FROM: ${VALID_FROM}
+      VALID_UNTIL: ${VALID_UNTIL}
+      NETWORK_PARTICIPANT_DOMAIN: ${NETWORK_PARTICIPANT_DOMAIN}
+      NETWORK_PARTICIPANT_CITY_CODE: ${NETWORK_PARTICIPANT_CITY_CODE}
+      NETWORK_PARTICIPANT_TYPE: ${NETWORK_PARTICIPANT_TYPE}
+      MONGO_DB_URL: ${MONGO_DB_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    ports:
+      - 2010:2010
+    expose:
+      - 2010
+    depends_on:
+      - mongo

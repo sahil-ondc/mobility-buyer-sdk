@@ -1,0 +1,57 @@
+---
+- name: Update web servers
+  hosts: '{{ target }}'
+  remote_user: ubuntu
+
+  vars_prompt:
+    - name: target
+      prompt: enter the hostname which you might have mentioned in host file
+      private: no
+
+    - name: domain
+      prompt: please enter the domain which will be serving the requests
+      private: no
+
+    - name: envtype
+      prompt: please enter the env file to copy, we are appending to .env, hence value can be -staging etc
+      private: no
+
+  tasks:
+    - name: Clone ref-mobility-buyer-frontend
+      git:
+        repo: 'https://github.com/sharmasahil0331/ref-mobility-buyer-frontend.git'
+        dest: '/home/ubuntu/ref-mobility-buyer-frontend'
+        version: 'main'
+        force: yes
+
+    - name: Clone ref-mobility-buyer-backend
+      git:
+        repo: 'https://github.com/sharmasahil0331/ref-mobility-buyer-backend.git'
+        dest: '/home/ubuntu/ref-mobility-buyer-backend'
+        version: 'main'
+        force: yes
+
+    - name: copy Dockerfile without SSL as dockerfile in ref-mobility-buyer-frontend
+      copy:
+        src: '{{ playbook_dir }}/../ref-mobility-buyer-frontend/Dockerfile'
+        dest: '/home/ubuntu/ref-mobility-buyer-frontend/Dockerfile'
+        owner: 'ubuntu'
+        group: 'ubuntu'
+        mode: '0755'
+
+    - name: copy nginx conf with ssl
+      copy:
+        src: '{{ playbook_dir }}/../ref-mobility-buyer-frontend/nginx.conf'
+        dest: '/home/ubuntu/ref-mobility-buyer-frontend/nginx.conf'
+        owner: 'ubuntu'
+        group: 'ubuntu'
+        mode: '0755'
+
+    - name: replace __domain__ with domain name
+      replace:
+        path: '/home/ubuntu/ref-mobility-buyer-frontend/nginx.conf'
+        regexp: '__domain_name__'
+        replace: '{{ domain }}'
+
+    - name: Run docker compose up
+      shell: 'cd /home/ubuntu/ && sudo docker-compose build && sudo docker-compose up -d'

@@ -1,0 +1,8 @@
+[submodule "ref-mobility-buyer-frontend"]
+	path = ref-mobility-buyer-frontend
+	url = https://github.com/sharmasahil0331/ref-mobility-buyer-frontend.git
+	branch = main
+[submodule "ref-mobility-buyer-backend"]
+	path = ref-mobility-buyer-backend
+	url = https://github.com/sharmasahil0331/ref-mobility-buyer-backend.git
+	branch = main
